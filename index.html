@@ -10,28 +10,29 @@
 <meta name="theme-color" content="#1D9E75">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <title>R&I Hub — Atlas Renewable Energy</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.11.1/lib/msal-browser.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;background:#f2f2f7;color:#1c1c1e;}
 .screen{display:none;height:100%;width:100%;flex-direction:column;overflow:hidden;position:absolute;top:0;left:0;}
 .screen.active{display:flex;}
-.statusbar{display:flex;justify-content:space-between;align-items:center;padding:env(safe-area-inset-top, 10px) 20px 0;padding-top:max(env(safe-area-inset-top),12px);font-size:12px;font-weight:600;flex-shrink:0;}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding-top:max(env(safe-area-inset-top),12px);padding-left:20px;padding-right:20px;font-size:12px;font-weight:600;flex-shrink:0;}
 .sb-icons{display:flex;gap:5px;align-items:center;}
 .home-bg{background:#0d2b1f;flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .home-date{text-align:center;padding:20px 0 16px;color:rgba(255,255,255,0.9);}
 .home-date .time{font-size:64px;font-weight:200;line-height:1;letter-spacing:-2px;}
 .home-date .day{font-size:15px;font-weight:400;opacity:0.75;margin-top:4px;}
 .notif-stack{padding:0 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
-.notif-banner{background:rgba(255,255,255,0.16);border-radius:14px;padding:10px 12px;display:flex;align-items:flex-start;gap:9px;}
+.notif-banner{background:rgba(255,255,255,0.16);border-radius:14px;padding:10px 12px;display:flex;align-items:flex-start;gap:9px;cursor:pointer;}
+.notif-banner:active{opacity:0.8;}
+.notif-banner.new-mail{background:rgba(52,199,89,0.25);border:0.5px solid rgba(52,199,89,0.4);}
 .notif-app-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
 .notif-content{flex:1;min-width:0;}
 .notif-title{font-size:12px;font-weight:600;color:rgba(255,255,255,0.95);}
-.notif-body{font-size:11.5px;color:rgba(255,255,255,0.72);line-height:1.3;margin-top:1px;}
+.notif-body{font-size:11.5px;color:rgba(255,255,255,0.72);line-height:1.3;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .notif-time{font-size:10px;color:rgba(255,255,255,0.45);flex-shrink:0;padding-top:1px;}
 .app-grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 8px 8px;}
 .app-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
@@ -59,12 +60,14 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
 .ios-row:active{background:#f5f5f5;}
 .row-icon{width:29px;height:29px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0;}
 .row-label{flex:1;font-size:15px;color:#1c1c1e;}
+.row-sub{font-size:12px;color:#8e8e93;margin-top:1px;}
 .row-val{font-size:14px;color:#8e8e93;display:flex;align-items:center;gap:4px;}
 .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;}
 .pill-ok{background:#d4edda;color:#155724;}
 .pill-warn{background:#fff3cd;color:#856404;}
 .pill-err{background:#ffe0e0;color:#842029;}
 .pill-blue{background:#ddeeff;color:#004a99;}
+.pill-gray{background:#f1f1f1;color:#555;}
 .chevron{color:#c7c7cc;font-size:13px;}
 .alert-box{margin:14px 14px 0;border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;}
 .alert-warn{background:#fff8e1;}
@@ -106,10 +109,6 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
 .empty-state small{font-size:14px;color:#8e8e93;line-height:1.4;display:block;}
 .new-btn{margin:0 14px;background:#34c759;color:#fff;border:none;width:calc(100% - 28px);height:46px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;}
 .new-btn:active{opacity:0.8;}
-.hint-bar{background:#1D9E75;margin:14px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
-.hint-bar i{font-size:20px;color:#fff;flex-shrink:0;}
-.hint-bar p{font-size:13px;color:#fff;line-height:1.4;}
-.hint-bar strong{font-weight:600;}
 .home-ind{height:max(env(safe-area-inset-bottom),22px);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ind-bar{width:110px;height:4px;border-radius:2px;}
 .ind-white{background:rgba(255,255,255,0.35);}
@@ -117,16 +116,68 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
 .bar-chart-row{padding:0 4px;margin-bottom:6px;}
 .bar-bg{background:#e5e5ea;border-radius:3px;height:7px;overflow:hidden;margin-top:4px;}
 .bar-fill{height:100%;border-radius:3px;}
+
+/* OUTLOOK PANEL */
+.mail-header{display:flex;align-items:center;justify-content:space-between;margin:14px 14px 0;}
+.mail-header-title{font-size:12px;font-weight:500;color:#6b6b70;text-transform:uppercase;letter-spacing:0.04em;}
+.sync-btn{font-size:12px;color:#34c759;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.mail-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:0.5px solid #e5e5ea;cursor:pointer;}
+.mail-row:last-child{border-bottom:none;}
+.mail-row:active{background:#f5f5f5;}
+.mail-dot{width:8px;height:8px;border-radius:50%;background:#34c759;flex-shrink:0;margin-top:5px;}
+.mail-dot.read{background:transparent;}
+.mail-body{flex:1;min-width:0;}
+.mail-from{font-size:13px;font-weight:600;color:#1c1c1e;}
+.mail-subj{font-size:13px;color:#1c1c1e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mail-prev{font-size:12px;color:#8e8e93;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mail-time{font-size:11px;color:#8e8e93;flex-shrink:0;}
+.mail-tag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:5px;margin-top:3px;}
+
+/* LOGIN OVERLAY */
+.login-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:#0d2b1f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;padding:32px;}
+.login-logo{width:80px;height:80px;border-radius:22px;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;margin-bottom:24px;}
+.login-title{font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;text-align:center;}
+.login-sub{font-size:14px;color:rgba(255,255,255,0.6);text-align:center;line-height:1.5;margin-bottom:32px;}
+.login-btn{background:#1D9E75;color:#fff;border:none;width:100%;height:50px;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;}
+.login-btn:active{opacity:0.8;}
+.login-btn-skip{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:none;width:100%;height:44px;border-radius:14px;font-size:14px;cursor:pointer;}
+.login-user{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;margin-bottom:16px;width:100%;}
+.login-user-name{font-size:13px;color:#fff;font-weight:500;}
+.login-user-email{font-size:12px;color:rgba(255,255,255,0.6);}
+.spinning{animation:spin 1s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-logo">R&I</div>
+  <div class="login-title">Risk & Insurance Hub</div>
+  <div class="login-sub">Atlas Renewable Energy<br>Conectá tu cuenta corporativa para recibir notificaciones automáticas de Oracle, aprobaciones y Tesorería.</div>
+  <div id="loginUserBox" style="display:none;width:100%;">
+    <div class="login-user">
+      <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;" id="userInitials">MJ</div>
+      <div>
+        <div class="login-user-name" id="userName">Cargando...</div>
+        <div class="login-user-email" id="userEmail"></div>
+      </div>
+    </div>
+  </div>
+  <button class="login-btn" id="loginBtn" onclick="signIn()">
+    <i class="ti ti-brand-windows" style="font-size:20px;" aria-hidden="true"></i>
+    Iniciar sesión con Microsoft
+  </button>
+  <button class="login-btn-skip" onclick="skipLogin()">Continuar sin conectar correo</button>
+</div>
+
 <!-- HOME -->
-<div class="screen active" id="home">
+<div class="screen" id="home">
   <div class="home-bg">
     <div class="statusbar" style="color:rgba(255,255,255,0.9);">
       <span id="clk">9:41</span>
       <div class="sb-icons">
+        <span id="userTag" style="font-size:10px;color:rgba(255,255,255,0.6);"></span>
         <i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i>
         <i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i>
         <i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i>
@@ -136,7 +187,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
       <div class="time" id="bigTime">9:41</div>
       <div class="day" id="bigDate">Miércoles, 24 de junio</div>
     </div>
-    <div class="notif-stack">
+    <div class="notif-stack" id="notifStack">
       <div class="notif-banner">
         <div class="notif-app-icon" style="background:#ff3b30;"><i class="ti ti-alert-triangle" style="font-size:14px;" aria-hidden="true"></i></div>
         <div class="notif-content">
@@ -173,27 +224,27 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
           <span class="app-label">ERM</span>
         </div>
         <div class="app-item" onclick="go('upload')">
-          <div class="app-icon" style="background:#8e8e93;"><i class="ti ti-upload" aria-hidden="true"></i><span class="badge" style="background:#ff9500;">2</span></div>
+          <div class="app-icon" style="background:#8e8e93;"><i class="ti ti-upload" aria-hidden="true"></i><span class="badge" id="uploadBadge" style="background:#ff9500;">2</span></div>
           <span class="app-label">Upload</span>
         </div>
         <div class="app-item" onclick="go('treasury')">
-          <div class="app-icon" style="background:#ff2d55;"><i class="ti ti-send" aria-hidden="true"></i><span class="badge">1</span></div>
+          <div class="app-icon" style="background:#ff2d55;"><i class="ti ti-send" aria-hidden="true"></i><span class="badge" id="treasuryBadge">1</span></div>
           <span class="app-label">Tesorería</span>
         </div>
         <div class="app-item" onclick="go('oracle')">
           <div class="app-icon" style="background:#ff3b30;"><i class="ti ti-database" aria-hidden="true"></i></div>
           <span class="app-label">Oracle</span>
         </div>
-        <div class="app-item" onclick="go('dashboard')">
-          <div class="app-icon" style="background:#1d9e75;"><i class="ti ti-chart-bar" aria-hidden="true"></i></div>
-          <span class="app-label">Dashboard</span>
+        <div class="app-item" onclick="go('inbox')">
+          <div class="app-icon" style="background:#0078d4;"><i class="ti ti-mail" aria-hidden="true"></i><span class="badge" id="inboxBadge" style="display:none;">0</span></div>
+          <span class="app-label">Outlook</span>
         </div>
       </div>
     </div>
     <div class="dock">
       <div class="dock-inner">
         <div class="dock-item" onclick="go('payments')"><div class="dock-icon" style="background:#34c759;"><i class="ti ti-credit-card" aria-hidden="true"></i></div><span class="dock-label">Payments</span></div>
-        <div class="dock-item" onclick="go('upload')"><div class="dock-icon" style="background:#8e8e93;"><i class="ti ti-upload" aria-hidden="true"></i></div><span class="dock-label">Upload</span></div>
+        <div class="dock-item" onclick="go('inbox')"><div class="dock-icon" style="background:#0078d4;"><i class="ti ti-mail" aria-hidden="true"></i></div><span class="dock-label">Outlook</span></div>
         <div class="dock-item" onclick="go('treasury')"><div class="dock-icon" style="background:#ff2d55;"><i class="ti ti-send" aria-hidden="true"></i></div><span class="dock-label">Tesorería</span></div>
         <div class="dock-item" onclick="go('dashboard')"><div class="dock-icon" style="background:#1d9e75;"><i class="ti ti-chart-bar" aria-hidden="true"></i></div><span class="dock-label">Dashboard</span></div>
       </div>
@@ -202,9 +253,51 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
   </div>
 </div>
 
+<!-- INBOX / OUTLOOK -->
+<div class="screen" id="inbox">
+  <div class="statusbar"><span id="clk2">9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Outlook — R&I</span><div class="nav-action" onclick="syncMail()"><i class="ti ti-refresh" style="font-size:16px;" aria-hidden="true"></i></div></div>
+  <div class="inner-screen">
+    <div id="inboxNotConnected" style="display:none;">
+      <div class="empty-state">
+        <i class="ti ti-mail-off" aria-hidden="true" style="color:#8e8e93;"></i>
+        <p>Correo no conectado</p>
+        <small>Iniciá sesión con tu cuenta de Microsoft para ver los correos de Oracle, aprobaciones y Tesorería automáticamente.</small>
+      </div>
+      <div style="padding:0 14px;"><button class="new-btn" onclick="signIn()">Conectar cuenta Microsoft</button></div>
+    </div>
+    <div id="inboxLoading" style="display:none;text-align:center;padding:40px 20px;">
+      <i class="ti ti-refresh spinning" style="font-size:32px;color:#34c759;display:block;margin-bottom:12px;" aria-hidden="true"></i>
+      <p style="font-size:14px;color:#8e8e93;">Sincronizando correos...</p>
+    </div>
+    <div id="inboxContent">
+      <div class="mail-header">
+        <span class="mail-header-title">Correos relevantes — R&I</span>
+        <span class="sync-btn" onclick="syncMail()"><i class="ti ti-refresh" style="font-size:12px;" aria-hidden="true"></i>Actualizar</span>
+      </div>
+      <div class="ios-section" style="padding-top:10px;">
+        <div class="ios-label">Oracle — POs implementadas</div>
+        <div class="ios-card" id="oracleMails">
+          <div class="ios-row"><div class="row-icon" style="background:#8e8e93;"><i class="ti ti-refresh" aria-hidden="true"></i></div><div class="row-label" style="color:#8e8e93;font-size:13px;">Iniciá sesión para sincronizar</div></div>
+        </div>
+        <div class="ios-label">Aprobaciones de PR</div>
+        <div class="ios-card" id="approvalMails">
+          <div class="ios-row"><div class="row-icon" style="background:#8e8e93;"><i class="ti ti-refresh" aria-hidden="true"></i></div><div class="row-label" style="color:#8e8e93;font-size:13px;">Iniciá sesión para sincronizar</div></div>
+        </div>
+        <div class="ios-label">Tesorería / SSC</div>
+        <div class="ios-card" id="treasuryMails">
+          <div class="ios-row"><div class="row-icon" style="background:#8e8e93;"><i class="ti ti-refresh" aria-hidden="true"></i></div><div class="row-label" style="color:#8e8e93;font-size:13px;">Iniciá sesión para sincronizar</div></div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
 <!-- PAYMENTS -->
 <div class="screen" id="payments">
-  <div class="statusbar"><span id="clk2">9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
   <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Payments</span><span class="nav-action">+ Nueva PR</span></div>
   <div class="inner-screen">
     <div class="alert-box alert-warn">
@@ -255,18 +348,14 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
       <div class="mtile"><div class="mtile-val" style="color:#34c759;">0</div><div class="mtile-lbl">Activos</div></div>
       <div class="mtile"><div class="mtile-val">3</div><div class="mtile-lbl">Cerrados 2026</div></div>
     </div>
-    <div class="empty-state">
-      <i class="ti ti-circle-check" aria-hidden="true"></i>
-      <p>Sin siniestros activos</p>
-      <small>Vista Alegre, Boa Sorte y Draco están al día. Pólizas PDBI/OAR vigentes.</small>
-    </div>
+    <div class="empty-state"><i class="ti ti-circle-check" aria-hidden="true"></i><p>Sin siniestros activos</p><small>Pólizas PDBI/OAR vigentes.</small></div>
     <button class="new-btn">+ Registrar nuevo siniestro</button>
     <div class="ios-section" style="margin-top:18px;">
       <div class="ios-label">Pólizas activas</div>
       <div class="ios-card">
-        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">PDBI — Starr International</div><div class="row-val"><span class="pill pill-ok">Vigente</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
-        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">OAR — Starr International</div><div class="row-val"><span class="pill pill-ok">Vigente</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
-        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">BOA 10 — Fator Seguradora</div><div class="row-val"><span class="pill pill-ok">Vigente</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">PDBI — Starr International</div><div class="row-val"><span class="pill pill-ok">Vigente</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">OAR — Starr International</div><div class="row-val"><span class="pill pill-ok">Vigente</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">BOA 10 — Fator Seguradora</div><div class="row-val"><span class="pill pill-ok">Vigente</span></div></div>
       </div>
     </div>
     <div style="height:20px;"></div>
@@ -288,17 +377,12 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
       <div class="mtile"><div class="mtile-val" style="color:#ff3b30;">4</div><div class="mtile-lbl">Pendientes</div></div>
     </div>
     <div class="ios-section">
-      <div class="ios-label">POs pendientes de carga</div>
+      <div class="ios-label">POs pendientes</div>
       <div class="ios-card">
         <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA2 — Draco 2</div><div class="row-val"><span class="pill pill-err">Sin acceso</span></div></div>
         <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA9 — Draco 9</div><div class="row-val"><span class="pill pill-warn">Budget</span></div></div>
         <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA10 — Draco 10</div><div class="row-val"><span class="pill pill-err">Sin acceso</span></div></div>
         <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA11 — Draco 11</div><div class="row-val"><span class="pill pill-err">Sin acceso</span></div></div>
-      </div>
-      <div class="ios-label">Acciones</div>
-      <div class="ios-card">
-        <div class="ios-row"><div class="row-icon" style="background:#007aff;"><i class="ti ti-external-link" aria-hidden="true"></i></div><div class="row-label">Abrir portal Starr</div><div class="row-val"><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
-        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-ticket" aria-hidden="true"></i></div><div class="row-label">Escalar ticket TI #4821</div><div class="row-val"><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
       </div>
     </div>
     <div style="height:20px;"></div>
@@ -312,9 +396,9 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
   <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">ERM</span><span class="nav-action">Exportar</span></div>
   <div class="inner-screen" style="padding-top:14px;">
     <div class="ios-section"><div class="ios-label">Riesgos activos</div></div>
-    <div class="erm-risk"><div class="erm-dot" style="background:#ff3b30;"></div><div style="flex:1;"><div class="erm-label">Bug Oracle — cuentas contables</div><div class="erm-sub">214100007 reemplaza a 511300002/611800002 al hacer Submit</div></div><div class="erm-level" style="color:#ff3b30;">Alto</div></div>
-    <div class="erm-risk"><div class="erm-dot" style="background:#ff3b30;"></div><div style="flex:1;"><div class="erm-label">Acceso portal proveedores</div><div class="erm-sub">Ticket TI #4821 sin resolver — 4 POs bloqueadas</div></div><div class="erm-level" style="color:#ff3b30;">Alto</div></div>
-    <div class="erm-risk"><div class="erm-dot" style="background:#ff9500;"></div><div style="flex:1;"><div class="erm-label">Retrabajo PRs — ciclo extendido</div><div class="erm-sub">+6,5 días promedio en Draco por devoluciones</div></div><div class="erm-level" style="color:#ff9500;">Medio</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff3b30;"></div><div style="flex:1;"><div class="erm-label">Bug Oracle — cuentas contables</div><div class="erm-sub">214100007 reemplaza a 511300002/611800002</div></div><div class="erm-level" style="color:#ff3b30;">Alto</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff3b30;"></div><div style="flex:1;"><div class="erm-label">Acceso portal proveedores</div><div class="erm-sub">Ticket TI #4821 sin resolver</div></div><div class="erm-level" style="color:#ff3b30;">Alto</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff9500;"></div><div style="flex:1;"><div class="erm-label">Retrabajo PRs — ciclo extendido</div><div class="erm-sub">+6,5 días promedio en Draco</div></div><div class="erm-level" style="color:#ff9500;">Medio</div></div>
     <div class="erm-risk"><div class="erm-dot" style="background:#ff9500;"></div><div style="flex:1;"><div class="erm-label">Budget insuficiente — Draco 9</div><div class="erm-sub">PRDRA9-00131 requiere validación FP&A</div></div><div class="erm-level" style="color:#ff9500;">Medio</div></div>
     <div class="erm-risk"><div class="erm-dot" style="background:#34c759;"></div><div style="flex:1;"><div class="erm-label">Cobertura de seguro</div><div class="erm-sub">Pólizas PDBI/OAR activas — Starr International</div></div><div class="erm-level" style="color:#34c759;">Ok</div></div>
     <div style="height:20px;"></div>
@@ -327,11 +411,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
   <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
   <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Upload</span><span class="nav-action"></span></div>
   <div class="inner-screen">
-    <div class="upload-zone">
-      <i class="ti ti-cloud-upload" aria-hidden="true"></i>
-      <p>Tocá para agregar archivos</p>
-      <span>Pólizas · Facturas · CAF · POs</span>
-    </div>
+    <div class="upload-zone"><i class="ti ti-cloud-upload" aria-hidden="true"></i><p>Tocá para agregar archivos</p><span>Pólizas · Facturas · CAF · POs</span></div>
     <div class="ios-section">
       <div class="ios-label">Documentos recientes</div>
       <div class="ios-card">
@@ -339,7 +419,6 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
         <div class="ios-row"><div class="row-icon" style="background:#007aff;"><i class="ti ti-file-text" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Factura_5048905_BOA1.pdf</div><div class="row-val"><span class="pill pill-ok">POBS1</span></div></div>
         <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-alert" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Factura_5048925_DRA2.pdf</div><div class="row-val"><span class="pill pill-warn">Sin vincular</span></div></div>
         <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-alert" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">CAF_Draco9_actualizado.pdf</div><div class="row-val"><span class="pill pill-warn">Sin vincular</span></div></div>
-        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">ExcPaymentRequest_v3.xlsx</div><div class="row-val"><span class="pill pill-blue">Treasury</span></div></div>
       </div>
     </div>
     <div style="height:20px;"></div>
@@ -357,16 +436,16 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
       <div class="compose-box">
         <div class="compose-to">Para: <span>SSC Treasury — Shared Service Center</span></div>
         <div style="font-size:12px;color:#8e8e93;margin-bottom:7px;">Asunto: Pago Extraordinario PDBI/OAR — BRL 8.429.079,46</div>
-        <div class="compose-preview">Solicitud de pago extraordinario para 37 pagos de primas de seguro PDBI/OAR. Ciclo interno completado. Delays causados por bug Oracle y acceso bloqueado al portal de proveedores — ambos fuera del control del área...</div>
-        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
+        <div class="compose-preview">Solicitud de pago extraordinario para 37 pagos de primas de seguro PDBI/OAR. Delays causados por bug Oracle y acceso bloqueado al portal...</div>
+        <div style="margin-top:10px;display:flex;justify-content:space-between;">
           <span class="pill pill-warn" style="font-size:11px;">En revisión · 24 jun</span>
           <span style="font-size:12px;color:#8e8e93;">v3 · xlsx adjunto</span>
         </div>
       </div>
       <div class="ios-label" style="margin-top:4px;">Mensajes anteriores</div>
       <div class="ios-card">
-        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-code" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Escalación bug Oracle — TI</div><div class="row-val"><span class="pill pill-err">Borrador</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
-        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Confirmación POs · 17 jun</div><div class="row-val" style="font-size:12px;">Enviado<i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-code" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Escalación bug Oracle — TI</div><div class="row-val"><span class="pill pill-err">Borrador</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Confirmación POs · 17 jun</div><div class="row-val" style="font-size:12px;">Enviado</div></div>
       </div>
     </div>
     <button class="send-btn"><i class="ti ti-send" style="font-size:17px;" aria-hidden="true"></i>Enviar a Tesorería</button>
@@ -375,14 +454,14 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
   <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
 </div>
 
-<!-- ORACLE STATUS -->
+<!-- ORACLE -->
 <div class="screen" id="oracle">
   <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
   <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Oracle Cloud</span><span class="nav-action"></span></div>
   <div class="inner-screen">
     <div class="alert-box alert-warn" style="margin-top:14px;">
       <i class="ti ti-alert-triangle alert-icon" style="color:#ff9500;" aria-hidden="true"></i>
-      <div class="alert-text"><strong>Bug conocido sin resolver:</strong> cuenta 214100007 (pasivo) reemplaza a 511300002/611800002 (gastos) al hacer Submit. Reportar a TI con evidencia del dashboard.</div>
+      <div class="alert-text"><strong>Bug conocido:</strong> cuenta 214100007 reemplaza a 511300002/611800002 al hacer Submit.</div>
     </div>
     <div class="ios-section" style="margin-top:14px;">
       <div class="ios-label">Estado del sistema</div>
@@ -392,7 +471,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
         <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label">Flujo de aprobaciones</div><div class="row-val"><span class="pill pill-ok">Normal</span></div></div>
         <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-clock" aria-hidden="true"></i></div><div class="row-label">Portal proveedores</div><div class="row-val"><span class="pill pill-warn">Acceso TI</span></div></div>
       </div>
-      <div class="ios-label">Ciclos promedio (días)</div>
+      <div class="ios-label">Ciclos promedio</div>
       <div class="ios-card" style="padding:12px 14px;">
         <div class="bar-chart-row"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Vista Alegre</span><span style="color:#34c759;font-weight:600;">7,0 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#34c759;width:60%;"></div></div></div>
         <div class="bar-chart-row"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Boa Sorte</span><span style="color:#ff9500;font-weight:600;">8,8 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#ff9500;width:73%;"></div></div></div>
@@ -434,59 +513,205 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
 </div>
 
 <script>
-function go(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+const CLIENT_ID = 'da58bb47-cfdd-41a7-89c5-3ef5e06f984c';
+const TENANT_ID = 'a9b1381c-55e9-43ed-8e36-10751787678d';
+
+const msalConfig = {
+  auth: {
+    clientId: CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${TENANT_ID}`,
+    redirectUri: 'https://mjatlasren.github.io/Insurance-hub/'
+  },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+};
+
+const scopes = ['User.Read', 'Mail.Read'];
+let msalInstance, currentAccount;
+
+async function initMsal() {
+  try {
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+    const response = await msalInstance.handleRedirectPromise();
+    if (response) { currentAccount = response.account; onSignedIn(); return; }
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) { currentAccount = accounts[0]; onSignedIn(); }
+    else { document.getElementById('loginOverlay').style.display = 'flex'; }
+  } catch(e) {
+    console.error('MSAL init error:', e);
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+}
+
+async function signIn() {
+  try {
+    const btn = document.getElementById('loginBtn');
+    btn.innerHTML = '<i class="ti ti-refresh spinning" style="font-size:18px;" aria-hidden="true"></i> Conectando...';
+    await msalInstance.loginRedirect({ scopes });
+  } catch(e) {
+    console.error('Login error:', e);
+    document.getElementById('loginBtn').innerHTML = '<i class="ti ti-brand-windows" style="font-size:20px;" aria-hidden="true"></i> Iniciar sesión con Microsoft';
+  }
+}
+
+function skipLogin() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  go('home');
+}
+
+function onSignedIn() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  const name = currentAccount.name || currentAccount.username;
+  const email = currentAccount.username;
+  const initials = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('userTag').textContent = initials;
+  go('home');
+  syncMail();
+  setInterval(syncMail, 5 * 60 * 1000);
+}
+
+async function getToken() {
+  try {
+    const res = await msalInstance.acquireTokenSilent({ scopes, account: currentAccount });
+    return res.accessToken;
+  } catch(e) {
+    const res = await msalInstance.acquireTokenRedirect({ scopes });
+    return null;
+  }
+}
+
+async function syncMail() {
+  if (!currentAccount) { document.getElementById('inboxNotConnected').style.display = 'block'; return; }
+  document.getElementById('inboxNotConnected').style.display = 'none';
+  document.getElementById('inboxLoading').style.display = 'block';
+  document.getElementById('inboxContent').style.display = 'none';
+  try {
+    const token = await getToken();
+    if (!token) return;
+    const filters = [
+      "contains(subject,'Purchase Order')",
+      "contains(subject,'Requisition')",
+      "contains(subject,'Implemented')",
+      "contains(subject,'Approved')",
+      "contains(subject,'Returned')",
+      "contains(subject,'Treasury')",
+      "contains(subject,'Tesoreria')",
+      "contains(subject,'Payment')",
+      "contains(subject,'SSC')",
+      "contains(subject,'PDBI')",
+      "contains(subject,'PO')"
+    ];
+    const filter = filters.join(' or ');
+    const url = `https://graph.microsoft.com/v1.0/me/messages?$filter=${encodeURIComponent(filter)}&$orderby=receivedDateTime desc&$top=30&$select=subject,from,receivedDateTime,isRead,bodyPreview`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    renderMails(data.value || []);
+    updateBadges(data.value || []);
+  } catch(e) {
+    console.error('Mail sync error:', e);
+  } finally {
+    document.getElementById('inboxLoading').style.display = 'none';
+    document.getElementById('inboxContent').style.display = 'block';
+  }
+}
+
+function renderMails(mails) {
+  const oracle = mails.filter(m => /Purchase Order|Implemented|Requisition|POBS|POVA|PODRA|PDBI|PO[A-Z]/i.test(m.subject));
+  const approvals = mails.filter(m => /Approved|Returned|Approval|aprobad|devuelt/i.test(m.subject) && !/Treasury|SSC|Payment/i.test(m.subject));
+  const treasury = mails.filter(m => /Treasury|Tesoreria|SSC|Exceptional|Payment|Pago/i.test(m.subject));
+
+  renderMailList('oracleMails', oracle, '#ff3b30');
+  renderMailList('approvalMails', approvals, '#34c759');
+  renderMailList('treasuryMails', treasury, '#ff2d55');
+
+  const total = mails.filter(m => !m.isRead).length;
+  const badge = document.getElementById('inboxBadge');
+  if (total > 0) { badge.textContent = total; badge.style.display = 'flex'; } else { badge.style.display = 'none'; }
+
+  if (mails.length > 0) addMailNotifs(mails.filter(m => !m.isRead).slice(0, 2));
+}
+
+function renderMailList(containerId, mails, color) {
+  const el = document.getElementById(containerId);
+  if (!mails || mails.length === 0) {
+    el.innerHTML = '<div class="ios-row"><div class="row-label" style="color:#8e8e93;font-size:13px;">Sin correos recientes</div></div>';
+    return;
+  }
+  el.innerHTML = mails.slice(0, 5).map(m => {
+    const from = m.from?.emailAddress?.name || m.from?.emailAddress?.address || 'Desconocido';
+    const time = formatMailTime(m.receivedDateTime);
+    const unread = !m.isRead;
+    return `<div class="mail-row">
+      <div class="mail-dot ${unread ? '' : 'read'}"></div>
+      <div class="mail-body">
+        <div class="mail-from">${escHtml(from)}</div>
+        <div class="mail-subj">${escHtml(m.subject)}</div>
+        <div class="mail-prev">${escHtml((m.bodyPreview||'').substring(0,80))}</div>
+      </div>
+      <div class="mail-time">${time}</div>
+    </div>`;
+  }).join('');
+}
+
+function addMailNotifs(mails) {
+  const stack = document.getElementById('notifStack');
+  const existing = stack.querySelectorAll('.new-mail');
+  existing.forEach(e => e.remove());
+  mails.forEach(m => {
+    const from = m.from?.emailAddress?.name || 'Outlook';
+    const div = document.createElement('div');
+    div.className = 'notif-banner new-mail';
+    div.onclick = () => go('inbox');
+    div.innerHTML = `<div class="notif-app-icon" style="background:#0078d4;"><i class="ti ti-mail" style="font-size:14px;" aria-hidden="true"></i></div>
+      <div class="notif-content"><div class="notif-title">${escHtml(from)}</div><div class="notif-body">${escHtml(m.subject)}</div></div>
+      <div class="notif-time">nuevo</div>`;
+    stack.insertBefore(div, stack.firstChild);
+  });
+}
+
+function updateBadges(mails) {
+  const unread = mails.filter(m => !m.isRead).length;
+  const badge = document.getElementById('inboxBadge');
+  if (unread > 0) { badge.textContent = unread; badge.style.display = 'flex'; } else { badge.style.display = 'none'; }
+}
+
+function formatMailTime(dt) {
+  if (!dt) return '';
+  const d = new Date(dt), now = new Date();
+  const diff = (now - d) / 1000 / 60;
+  if (diff < 60) return Math.round(diff) + 'm';
+  if (diff < 1440) return Math.round(diff/60) + 'h';
+  return d.getDate() + '/' + (d.getMonth()+1);
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-function tick(){
-  const now=new Date();
-  const h=now.getHours(), m=String(now.getMinutes()).padStart(2,'0');
-  const t=h+':'+m;
-  document.querySelectorAll('[id^="clk"]').forEach(el=>el.textContent=t);
-  const el=document.getElementById('bigTime');
-  if(el) el.textContent=t;
-  const days=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const d=document.getElementById('bigDate');
-  if(d) d.textContent=days[now.getDay()]+', '+now.getDate()+' de '+months[now.getMonth()];
+function tick() {
+  const now = new Date();
+  const t = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  document.querySelectorAll('[id^="clk"]').forEach(el => el.textContent = t);
+  const bt = document.getElementById('bigTime');
+  if (bt) bt.textContent = t;
+  const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const bd = document.getElementById('bigDate');
+  if (bd) bd.textContent = days[now.getDay()] + ', ' + now.getDate() + ' de ' + months[now.getMonth()];
 }
-tick(); setInterval(tick,30000);
+tick(); setInterval(tick, 30000);
 
-// Handle hash navigation (for PWA shortcuts)
-function handleHash(){
-  const h=location.hash.replace('#','');
-  if(h && document.getElementById(h)) go(h);
-}
-window.addEventListener('hashchange', handleHash);
-handleHash();
+window.addEventListener('hashchange', () => { const h = location.hash.replace('#',''); if (h && document.getElementById(h)) go(h); });
+if (location.hash) { const h = location.hash.replace('#',''); if (h && document.getElementById(h)) go(h); }
 
-// Register Service Worker
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js').then(reg=>{
-    console.log('[PWA] Service worker registrado:', reg.scope);
-    // Ask for notification permission
-    if('Notification' in window && Notification.permission==='default'){
-      Notification.requestPermission().then(p=>console.log('[PWA] Notificaciones:',p));
-    }
-  }).catch(err=>console.error('[PWA] Error SW:',err));
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(e => console.error('SW error:', e));
 }
 
-// Install prompt (Android Chrome / Desktop)
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  const bar=document.createElement('div');
-  bar.className='hint-bar';
-  bar.style='margin:14px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:#1D9E75;cursor:pointer;';
-  bar.innerHTML='<i class="ti ti-download" style="font-size:20px;color:#fff;" aria-hidden="true"></i><p style="font-size:13px;color:#fff;line-height:1.4;flex:1;">Instalá la app en tu dispositivo para usarla sin conexión <strong>→ Instalar ahora</strong></p>';
-  bar.onclick=()=>{ deferredPrompt.prompt(); bar.remove(); };
-  document.getElementById('home').querySelector('.home-bg').insertBefore(bar, document.querySelector('.app-grid-wrap'));
-  setTimeout(()=>{ if(bar.parentNode) bar.remove(); }, 12000);
-});
-
-window.addEventListener('appinstalled',()=>console.log('[PWA] App instalada'));
+window.addEventListener('load', initMsal);
 </script>
 </body>
 </html>
