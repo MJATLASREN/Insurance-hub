@@ -478,7 +478,8 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,Blink
         <div class="bar-chart-row" style="margin-bottom:0;"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Draco</span><span style="color:#ff3b30;font-weight:600;">13,2 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#ff3b30;width:100%;"></div></div></div>
       </div>
     </div>
-    <div style="height:20px;"></div>
+    <div id="oracleDataPanel"></div>
+  <div style="height:20px;"></div>
   </div>
   <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
 </div>
@@ -713,5 +714,76 @@ if ('serviceWorker' in navigator) {
 
 window.addEventListener('load', initMsal);
 </script>
+
+<script>
+// Oracle data reader — reads data passed via URL from bookmarklet
+function readOracleData() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get('oracle');
+  if (!encoded) return;
+  try {
+    const json = decodeURIComponent(escape(atob(encoded)));
+    const data = JSON.parse(json);
+    window._oracleData = data;
+    renderOraclePanel(data);
+    // Clean URL without reload
+    window.history.replaceState({}, '', window.location.pathname + '#oracle');
+    go('oracle');
+  } catch(e) { console.error('Oracle data parse error:', e); }
+}
+
+function renderOraclePanel(data) {
+  const panel = document.getElementById('oracleDataPanel');
+  if (!panel) return;
+  const ts = new Date(data.ts).toLocaleTimeString();
+  panel.innerHTML = `
+    <div class="ios-label" style="margin-top:14px;">Estado en tiempo real · ${ts}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 14px 14px;">
+      <div class="mtile"><div class="mtile-val" style="color:#34c759;">${data.approved}</div><div class="mtile-lbl">Aprobadas</div></div>
+      <div class="mtile"><div class="mtile-val" style="color:#ff9500;">${data.pending}</div><div class="mtile-lbl">Pendientes</div></div>
+      <div class="mtile"><div class="mtile-val" style="color:#ff3b30;">${data.returned + data.incomplete}</div><div class="mtile-lbl">Devueltas/Incompletas</div></div>
+      <div class="mtile"><div class="mtile-val" style="color:#34c759;">${data.withPO}</div><div class="mtile-lbl">Con PO</div></div>
+    </div>
+    ${data.errors > 0 ? `
+    <div class="alert-box alert-err" style="margin-bottom:14px;">
+      <i class="ti ti-alert-triangle alert-icon" style="color:#ff3b30;" aria-hidden="true"></i>
+      <div class="alert-text"><strong>${data.errors} error${data.errors>1?'es':''} de cuenta/budget:</strong><br>${data.errorList.join(', ')}</div>
+    </div>` : ''}
+    <div style="padding:0 14px;margin-bottom:14px;">
+      <div class="ios-label">Detalle PRs</div>
+      <div class="ios-card">
+        ${(data.items||[]).filter(i=>['returned','incomplete','pending'].includes(i.status)).slice(0,8).map(i=>`
+        <div class="ios-row">
+          <div class="row-icon" style="background:${i.status==='approved'?'#34c759':i.status==='pending'?'#ff9500':'#ff3b30'};">
+            <i class="ti ti-${i.status==='approved'?'check':i.status==='pending'?'clock':'x'}" aria-hidden="true"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="row-label" style="font-size:13px;">${i.pr}</div>
+            ${i.desc?`<div class="row-sub">${i.desc}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+            <span class="pill ${i.status==='approved'?'pill-ok':i.status==='pending'?'pill-warn':'pill-err'}">${i.status==='approved'?'OK':i.status==='pending'?'Pendiente':i.status==='incomplete'?'Incompleta':'Devuelta'}</span>
+            ${i.alert?`<span class="pill pill-err" style="font-size:10px;">${i.alert==='account_error'?'Cuenta':'Budget'}</span>`:''}
+          </div>
+        </div>`).join('')}
+        ${(data.items||[]).filter(i=>i.status==='approved').slice(0,5).map(i=>`
+        <div class="ios-row">
+          <div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div>
+          <div style="flex:1;min-width:0;">
+            <div class="row-label" style="font-size:13px;">${i.pr}</div>
+            ${i.po?`<div class="row-sub">${i.po}</div>`:''}
+          </div>
+          <span class="pill pill-ok">OK${i.funds==='liquidated'?' · Liquid.':''}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+window.addEventListener('load', function() {
+  setTimeout(readOracleData, 500);
+});
+</script>
+
 </body>
 </html>
+<!-- This file is complete - oracle sync added via localStorage reading in existing sw -->
