@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="R&I Hub">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1D9E75">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>R&I Hub — Atlas Renewable Energy</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;background:#f2f2f7;color:#1c1c1e;}
+.screen{display:none;height:100%;width:100%;flex-direction:column;overflow:hidden;position:absolute;top:0;left:0;}
+.screen.active{display:flex;}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:env(safe-area-inset-top, 10px) 20px 0;padding-top:max(env(safe-area-inset-top),12px);font-size:12px;font-weight:600;flex-shrink:0;}
+.sb-icons{display:flex;gap:5px;align-items:center;}
+.home-bg{background:#0d2b1f;flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.home-date{text-align:center;padding:20px 0 16px;color:rgba(255,255,255,0.9);}
+.home-date .time{font-size:64px;font-weight:200;line-height:1;letter-spacing:-2px;}
+.home-date .day{font-size:15px;font-weight:400;opacity:0.75;margin-top:4px;}
+.notif-stack{padding:0 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
+.notif-banner{background:rgba(255,255,255,0.16);border-radius:14px;padding:10px 12px;display:flex;align-items:flex-start;gap:9px;}
+.notif-app-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.notif-content{flex:1;min-width:0;}
+.notif-title{font-size:12px;font-weight:600;color:rgba(255,255,255,0.95);}
+.notif-body{font-size:11.5px;color:rgba(255,255,255,0.72);line-height:1.3;margin-top:1px;}
+.notif-time{font-size:10px;color:rgba(255,255,255,0.45);flex-shrink:0;padding-top:1px;}
+.app-grid-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 8px 8px;}
+.app-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.app-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 2px;cursor:pointer;border-radius:12px;transition:transform 0.1s,opacity 0.1s;-webkit-user-select:none;user-select:none;position:relative;}
+.app-item:active{opacity:0.65;transform:scale(0.9);}
+.app-icon{width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:25px;color:#fff;position:relative;flex-shrink:0;}
+.app-label{font-size:10.5px;color:rgba(255,255,255,0.95);text-align:center;line-height:1.2;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge{position:absolute;top:-5px;right:-5px;background:#ff3b30;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #0d2b1f;}
+.dock{padding:8px 16px;padding-bottom:max(env(safe-area-inset-bottom),16px);flex-shrink:0;}
+.dock-inner{background:rgba(255,255,255,0.18);border-radius:22px;padding:10px;display:flex;justify-content:space-around;}
+.dock-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+.dock-item:active{opacity:0.65;transform:scale(0.9);}
+.dock-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:23px;color:#fff;}
+.dock-label{font-size:10px;color:rgba(255,255,255,0.9);}
+.inner-screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.nav-bar{background:rgba(242,242,247,0.94);padding:10px 16px 8px;border-bottom:0.5px solid rgba(0,0,0,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.nav-title{font-size:17px;font-weight:600;color:#1c1c1e;flex:1;text-align:center;}
+.nav-back{font-size:15px;color:#34c759;display:flex;align-items:center;gap:2px;cursor:pointer;min-width:60px;}
+.nav-action{font-size:14px;color:#34c759;cursor:pointer;font-weight:500;min-width:60px;text-align:right;}
+.ios-section{padding:16px 16px 0;}
+.ios-label{font-size:12px;font-weight:500;color:#6b6b70;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;padding-left:4px;}
+.ios-card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.ios-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:0.5px solid #e5e5ea;min-height:44px;}
+.ios-row:last-child{border-bottom:none;}
+.ios-row:active{background:#f5f5f5;}
+.row-icon{width:29px;height:29px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0;}
+.row-label{flex:1;font-size:15px;color:#1c1c1e;}
+.row-val{font-size:14px;color:#8e8e93;display:flex;align-items:center;gap:4px;}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;}
+.pill-ok{background:#d4edda;color:#155724;}
+.pill-warn{background:#fff3cd;color:#856404;}
+.pill-err{background:#ffe0e0;color:#842029;}
+.pill-blue{background:#ddeeff;color:#004a99;}
+.chevron{color:#c7c7cc;font-size:13px;}
+.alert-box{margin:14px 14px 0;border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;}
+.alert-warn{background:#fff8e1;}
+.alert-err{background:#ffe5e5;}
+.alert-icon{font-size:17px;flex-shrink:0;margin-top:1px;}
+.alert-text{font-size:13px;color:#1c1c1e;line-height:1.45;}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 14px 0;}
+.mtile{background:#fff;border-radius:12px;padding:13px 14px;}
+.mtile-val{font-size:24px;font-weight:700;color:#1c1c1e;}
+.mtile-lbl{font-size:12px;color:#8e8e93;margin-top:2px;}
+.mtile-sub{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;display:inline-block;margin-top:5px;}
+.tl-wrap{margin:14px;background:#fff;border-radius:12px;padding:13px 14px;}
+.tl-title{font-size:13px;font-weight:600;color:#1c1c1e;margin-bottom:11px;}
+.tl{display:flex;align-items:flex-start;}
+.tl-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.tl-line{position:absolute;top:5px;left:50%;width:100%;height:1.5px;background:#e5e5ea;}
+.tl-step:last-child .tl-line{display:none;}
+.tl-dot{width:11px;height:11px;border-radius:50%;z-index:1;}
+.tl-lbl{font-size:8.5px;color:#8e8e93;margin-top:5px;text-align:center;line-height:1.3;}
+.tl-dt{font-size:8.5px;font-weight:600;color:#1c1c1e;text-align:center;}
+.upload-zone{margin:14px;background:#fff;border-radius:12px;padding:22px 14px;text-align:center;border:1.5px dashed #c7c7cc;}
+.upload-zone i{font-size:30px;color:#34c759;display:block;margin-bottom:7px;}
+.upload-zone p{font-size:14px;color:#8e8e93;margin-bottom:3px;}
+.upload-zone span{font-size:13px;color:#34c759;font-weight:500;}
+.send-btn{margin:0 14px 14px;background:#34c759;color:#fff;border:none;width:calc(100% - 28px);height:46px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.send-btn:active{opacity:0.8;}
+.compose-box{margin:14px;background:#fff;border-radius:12px;padding:13px 14px;}
+.compose-to{font-size:14px;color:#8e8e93;padding-bottom:9px;border-bottom:0.5px solid #e5e5ea;margin-bottom:9px;}
+.compose-to span{color:#1c1c1e;font-weight:500;}
+.compose-preview{font-size:13px;color:#3c3c43;line-height:1.5;}
+.erm-risk{margin:0 14px 9px;background:#fff;border-radius:12px;padding:13px 14px;display:flex;align-items:flex-start;gap:11px;}
+.erm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.erm-label{font-size:14px;color:#1c1c1e;font-weight:500;}
+.erm-sub{font-size:12px;color:#8e8e93;margin-top:2px;}
+.erm-level{font-size:12px;font-weight:600;margin-left:auto;flex-shrink:0;}
+.empty-state{text-align:center;padding:36px 20px;}
+.empty-state i{font-size:44px;color:#34c759;display:block;margin-bottom:11px;}
+.empty-state p{font-size:16px;font-weight:500;color:#1c1c1e;margin-bottom:6px;}
+.empty-state small{font-size:14px;color:#8e8e93;line-height:1.4;display:block;}
+.new-btn{margin:0 14px;background:#34c759;color:#fff;border:none;width:calc(100% - 28px);height:46px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;}
+.new-btn:active{opacity:0.8;}
+.hint-bar{background:#1D9E75;margin:14px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.hint-bar i{font-size:20px;color:#fff;flex-shrink:0;}
+.hint-bar p{font-size:13px;color:#fff;line-height:1.4;}
+.hint-bar strong{font-weight:600;}
+.home-ind{height:max(env(safe-area-inset-bottom),22px);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ind-bar{width:110px;height:4px;border-radius:2px;}
+.ind-white{background:rgba(255,255,255,0.35);}
+.ind-dark{background:rgba(0,0,0,0.18);}
+.bar-chart-row{padding:0 4px;margin-bottom:6px;}
+.bar-bg{background:#e5e5ea;border-radius:3px;height:7px;overflow:hidden;margin-top:4px;}
+.bar-fill{height:100%;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen active" id="home">
+  <div class="home-bg">
+    <div class="statusbar" style="color:rgba(255,255,255,0.9);">
+      <span id="clk">9:41</span>
+      <div class="sb-icons">
+        <i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i>
+        <i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i>
+        <i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i>
+      </div>
+    </div>
+    <div class="home-date">
+      <div class="time" id="bigTime">9:41</div>
+      <div class="day" id="bigDate">Miércoles, 24 de junio</div>
+    </div>
+    <div class="notif-stack">
+      <div class="notif-banner">
+        <div class="notif-app-icon" style="background:#ff3b30;"><i class="ti ti-alert-triangle" style="font-size:14px;" aria-hidden="true"></i></div>
+        <div class="notif-content">
+          <div class="notif-title">Oracle — Bug activo</div>
+          <div class="notif-body">PR PRDRA2: cuenta 214100007 reemplazada. Verificar antes de reenviar.</div>
+        </div>
+        <div class="notif-time">ahora</div>
+      </div>
+      <div class="notif-banner">
+        <div class="notif-app-icon" style="background:#ff9500;"><i class="ti ti-lock" style="font-size:14px;" aria-hidden="true"></i></div>
+        <div class="notif-content">
+          <div class="notif-title">Supplier portal</div>
+          <div class="notif-body">Ticket TI #4821 sin resolver — 4 POs pendientes de carga.</div>
+        </div>
+        <div class="notif-time">1d</div>
+      </div>
+    </div>
+    <div class="app-grid-wrap">
+      <div class="app-grid">
+        <div class="app-item" onclick="go('payments')">
+          <div class="app-icon" style="background:#34c759;"><i class="ti ti-credit-card" aria-hidden="true"></i><span class="badge">4</span></div>
+          <span class="app-label">Payments</span>
+        </div>
+        <div class="app-item" onclick="go('claims')">
+          <div class="app-icon" style="background:#ff9500;"><i class="ti ti-file-alert" aria-hidden="true"></i></div>
+          <span class="app-label">Claims</span>
+        </div>
+        <div class="app-item" onclick="go('supplier')">
+          <div class="app-icon" style="background:#007aff;"><i class="ti ti-building-store" aria-hidden="true"></i><span class="badge">4</span></div>
+          <span class="app-label">Supplier portal</span>
+        </div>
+        <div class="app-item" onclick="go('erm')">
+          <div class="app-icon" style="background:#5856d6;"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
+          <span class="app-label">ERM</span>
+        </div>
+        <div class="app-item" onclick="go('upload')">
+          <div class="app-icon" style="background:#8e8e93;"><i class="ti ti-upload" aria-hidden="true"></i><span class="badge" style="background:#ff9500;">2</span></div>
+          <span class="app-label">Upload</span>
+        </div>
+        <div class="app-item" onclick="go('treasury')">
+          <div class="app-icon" style="background:#ff2d55;"><i class="ti ti-send" aria-hidden="true"></i><span class="badge">1</span></div>
+          <span class="app-label">Tesorería</span>
+        </div>
+        <div class="app-item" onclick="go('oracle')">
+          <div class="app-icon" style="background:#ff3b30;"><i class="ti ti-database" aria-hidden="true"></i></div>
+          <span class="app-label">Oracle</span>
+        </div>
+        <div class="app-item" onclick="go('dashboard')">
+          <div class="app-icon" style="background:#1d9e75;"><i class="ti ti-chart-bar" aria-hidden="true"></i></div>
+          <span class="app-label">Dashboard</span>
+        </div>
+      </div>
+    </div>
+    <div class="dock">
+      <div class="dock-inner">
+        <div class="dock-item" onclick="go('payments')"><div class="dock-icon" style="background:#34c759;"><i class="ti ti-credit-card" aria-hidden="true"></i></div><span class="dock-label">Payments</span></div>
+        <div class="dock-item" onclick="go('upload')"><div class="dock-icon" style="background:#8e8e93;"><i class="ti ti-upload" aria-hidden="true"></i></div><span class="dock-label">Upload</span></div>
+        <div class="dock-item" onclick="go('treasury')"><div class="dock-icon" style="background:#ff2d55;"><i class="ti ti-send" aria-hidden="true"></i></div><span class="dock-label">Tesorería</span></div>
+        <div class="dock-item" onclick="go('dashboard')"><div class="dock-icon" style="background:#1d9e75;"><i class="ti ti-chart-bar" aria-hidden="true"></i></div><span class="dock-label">Dashboard</span></div>
+      </div>
+    </div>
+    <div class="home-ind"><div class="ind-bar ind-white"></div></div>
+  </div>
+</div>
+
+<!-- PAYMENTS -->
+<div class="screen" id="payments">
+  <div class="statusbar"><span id="clk2">9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Payments</span><span class="nav-action">+ Nueva PR</span></div>
+  <div class="inner-screen">
+    <div class="alert-box alert-warn">
+      <i class="ti ti-alert-triangle alert-icon" style="color:#ff9500;" aria-hidden="true"></i>
+      <div class="alert-text"><strong>Bug Oracle activo:</strong> al hacer Submit se reemplaza la cuenta. Verificar <strong>511300002</strong> o <strong>611800002</strong> antes de enviar.</div>
+    </div>
+    <div class="metrics">
+      <div class="mtile"><div class="mtile-val">37</div><div class="mtile-lbl">Pagos totales</div><span class="mtile-sub" style="background:#fff3cd;color:#856404;">4 sin PO</span></div>
+      <div class="mtile"><div class="mtile-val">8,4M</div><div class="mtile-lbl">Total BRL</div><span class="mtile-sub" style="background:#d4edda;color:#155724;">Starr Intl.</span></div>
+    </div>
+    <div class="ios-section">
+      <div class="ios-label">Oracle — Brasil</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label">Boa Sorte · 8 POs</div><div class="row-val"><span class="pill pill-ok">Portal ✓</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label">Vista Alegre · 18 POs</div><div class="row-val"><span class="pill pill-ok">Portal ✓</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label">Draco · 7 POs OK</div><div class="row-val"><span class="pill pill-ok">Portal ✓</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-x" aria-hidden="true"></i></div><div class="row-label">Draco · 4 POs</div><div class="row-val"><span class="pill pill-err">Pendientes</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+      </div>
+      <div class="ios-label">Odoo / Ticket — Otros países</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#5856d6;"><i class="ti ti-ticket" aria-hidden="true"></i></div><div class="row-label">Uruguay / Chile</div><div class="row-val">Procure-to-Pay<i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#5856d6;"><i class="ti ti-ticket" aria-hidden="true"></i></div><div class="row-label">Colombia / México</div><div class="row-val">Ticket Odoo<i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+      </div>
+    </div>
+    <div class="tl-wrap">
+      <div class="tl-title">Ciclo actual — Brasil</div>
+      <div class="tl">
+        <div class="tl-step"><div class="tl-line"></div><div class="tl-dot" style="background:#34c759;"></div><div class="tl-lbl">CAF</div><div class="tl-dt">may</div></div>
+        <div class="tl-step"><div class="tl-line"></div><div class="tl-dot" style="background:#34c759;"></div><div class="tl-lbl">Facturas</div><div class="tl-dt">1 jun</div></div>
+        <div class="tl-step"><div class="tl-line"></div><div class="tl-dot" style="background:#34c759;"></div><div class="tl-lbl">PRs</div><div class="tl-dt">4–10</div></div>
+        <div class="tl-step"><div class="tl-line"></div><div class="tl-dot" style="background:#ff3b30;"></div><div class="tl-lbl">Dev.</div><div class="tl-dt">10–11</div></div>
+        <div class="tl-step"><div class="tl-line"></div><div class="tl-dot" style="background:#34c759;"></div><div class="tl-lbl">Aprobado</div><div class="tl-dt">12–23</div></div>
+        <div class="tl-step"><div class="tl-line"></div><div class="tl-dot" style="background:#34c759;"></div><div class="tl-lbl">POs</div><div class="tl-dt">17–23</div></div>
+        <div class="tl-step"><div class="tl-dot" style="background:#ff9500;"></div><div class="tl-lbl">Pago</div><div class="tl-dt">esta sem.</div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- CLAIMS -->
+<div class="screen" id="claims">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Claims</span><span class="nav-action">+ Nuevo</span></div>
+  <div class="inner-screen">
+    <div class="metrics">
+      <div class="mtile"><div class="mtile-val" style="color:#34c759;">0</div><div class="mtile-lbl">Activos</div></div>
+      <div class="mtile"><div class="mtile-val">3</div><div class="mtile-lbl">Cerrados 2026</div></div>
+    </div>
+    <div class="empty-state">
+      <i class="ti ti-circle-check" aria-hidden="true"></i>
+      <p>Sin siniestros activos</p>
+      <small>Vista Alegre, Boa Sorte y Draco están al día. Pólizas PDBI/OAR vigentes.</small>
+    </div>
+    <button class="new-btn">+ Registrar nuevo siniestro</button>
+    <div class="ios-section" style="margin-top:18px;">
+      <div class="ios-label">Pólizas activas</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">PDBI — Starr International</div><div class="row-val"><span class="pill pill-ok">Vigente</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">OAR — Starr International</div><div class="row-val"><span class="pill pill-ok">Vigente</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label">BOA 10 — Fator Seguradora</div><div class="row-val"><span class="pill pill-ok">Vigente</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- SUPPLIER -->
+<div class="screen" id="supplier">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Supplier portal</span><span class="nav-action">Escalar TI</span></div>
+  <div class="inner-screen">
+    <div class="alert-box alert-err" style="margin-top:14px;">
+      <i class="ti ti-lock alert-icon" style="color:#ff3b30;" aria-hidden="true"></i>
+      <div class="alert-text"><strong>Acceso bloqueado — Ticket #4821.</strong> TI debe crear correo vinculado y activarlo en Oracle. Demora: ~4 días y contando.</div>
+    </div>
+    <div class="metrics">
+      <div class="mtile"><div class="mtile-val" style="color:#34c759;">33</div><div class="mtile-lbl">POs en portal</div></div>
+      <div class="mtile"><div class="mtile-val" style="color:#ff3b30;">4</div><div class="mtile-lbl">Pendientes</div></div>
+    </div>
+    <div class="ios-section">
+      <div class="ios-label">POs pendientes de carga</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA2 — Draco 2</div><div class="row-val"><span class="pill pill-err">Sin acceso</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA9 — Draco 9</div><div class="row-val"><span class="pill pill-warn">Budget</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA10 — Draco 10</div><div class="row-val"><span class="pill pill-err">Sin acceso</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-circle-x" aria-hidden="true"></i></div><div class="row-label">PODRA11 — Draco 11</div><div class="row-val"><span class="pill pill-err">Sin acceso</span></div></div>
+      </div>
+      <div class="ios-label">Acciones</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#007aff;"><i class="ti ti-external-link" aria-hidden="true"></i></div><div class="row-label">Abrir portal Starr</div><div class="row-val"><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-ticket" aria-hidden="true"></i></div><div class="row-label">Escalar ticket TI #4821</div><div class="row-val"><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- ERM -->
+<div class="screen" id="erm">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">ERM</span><span class="nav-action">Exportar</span></div>
+  <div class="inner-screen" style="padding-top:14px;">
+    <div class="ios-section"><div class="ios-label">Riesgos activos</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff3b30;"></div><div style="flex:1;"><div class="erm-label">Bug Oracle — cuentas contables</div><div class="erm-sub">214100007 reemplaza a 511300002/611800002 al hacer Submit</div></div><div class="erm-level" style="color:#ff3b30;">Alto</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff3b30;"></div><div style="flex:1;"><div class="erm-label">Acceso portal proveedores</div><div class="erm-sub">Ticket TI #4821 sin resolver — 4 POs bloqueadas</div></div><div class="erm-level" style="color:#ff3b30;">Alto</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff9500;"></div><div style="flex:1;"><div class="erm-label">Retrabajo PRs — ciclo extendido</div><div class="erm-sub">+6,5 días promedio en Draco por devoluciones</div></div><div class="erm-level" style="color:#ff9500;">Medio</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#ff9500;"></div><div style="flex:1;"><div class="erm-label">Budget insuficiente — Draco 9</div><div class="erm-sub">PRDRA9-00131 requiere validación FP&A</div></div><div class="erm-level" style="color:#ff9500;">Medio</div></div>
+    <div class="erm-risk"><div class="erm-dot" style="background:#34c759;"></div><div style="flex:1;"><div class="erm-label">Cobertura de seguro</div><div class="erm-sub">Pólizas PDBI/OAR activas — Starr International</div></div><div class="erm-level" style="color:#34c759;">Ok</div></div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- UPLOAD -->
+<div class="screen" id="upload">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Upload</span><span class="nav-action"></span></div>
+  <div class="inner-screen">
+    <div class="upload-zone">
+      <i class="ti ti-cloud-upload" aria-hidden="true"></i>
+      <p>Tocá para agregar archivos</p>
+      <span>Pólizas · Facturas · CAF · POs</span>
+    </div>
+    <div class="ios-section">
+      <div class="ios-label">Documentos recientes</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#007aff;"><i class="ti ti-file-text" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Poliza_PDBI_Starr_2026.pdf</div><div class="row-val"><span class="pill pill-ok">CAF</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#007aff;"><i class="ti ti-file-text" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Factura_5048905_BOA1.pdf</div><div class="row-val"><span class="pill pill-ok">POBS1</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-alert" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Factura_5048925_DRA2.pdf</div><div class="row-val"><span class="pill pill-warn">Sin vincular</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-file-alert" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">CAF_Draco9_actualizado.pdf</div><div class="row-val"><span class="pill pill-warn">Sin vincular</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-file-check" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">ExcPaymentRequest_v3.xlsx</div><div class="row-val"><span class="pill pill-blue">Treasury</span></div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- TREASURY -->
+<div class="screen" id="treasury">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Tesorería</span><span class="nav-action">Redactar</span></div>
+  <div class="inner-screen">
+    <div class="ios-section" style="margin-top:14px;">
+      <div class="ios-label">Solicitud activa</div>
+      <div class="compose-box">
+        <div class="compose-to">Para: <span>SSC Treasury — Shared Service Center</span></div>
+        <div style="font-size:12px;color:#8e8e93;margin-bottom:7px;">Asunto: Pago Extraordinario PDBI/OAR — BRL 8.429.079,46</div>
+        <div class="compose-preview">Solicitud de pago extraordinario para 37 pagos de primas de seguro PDBI/OAR. Ciclo interno completado. Delays causados por bug Oracle y acceso bloqueado al portal de proveedores — ambos fuera del control del área...</div>
+        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span class="pill pill-warn" style="font-size:11px;">En revisión · 24 jun</span>
+          <span style="font-size:12px;color:#8e8e93;">v3 · xlsx adjunto</span>
+        </div>
+      </div>
+      <div class="ios-label" style="margin-top:4px;">Mensajes anteriores</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-code" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Escalación bug Oracle — TI</div><div class="row-val"><span class="pill pill-err">Borrador</span><i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label" style="font-size:13px;">Confirmación POs · 17 jun</div><div class="row-val" style="font-size:12px;">Enviado<i class="ti ti-chevron-right chevron" aria-hidden="true"></i></div></div>
+      </div>
+    </div>
+    <button class="send-btn"><i class="ti ti-send" style="font-size:17px;" aria-hidden="true"></i>Enviar a Tesorería</button>
+    <div style="height:8px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- ORACLE STATUS -->
+<div class="screen" id="oracle">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Oracle Cloud</span><span class="nav-action"></span></div>
+  <div class="inner-screen">
+    <div class="alert-box alert-warn" style="margin-top:14px;">
+      <i class="ti ti-alert-triangle alert-icon" style="color:#ff9500;" aria-hidden="true"></i>
+      <div class="alert-text"><strong>Bug conocido sin resolver:</strong> cuenta 214100007 (pasivo) reemplaza a 511300002/611800002 (gastos) al hacer Submit. Reportar a TI con evidencia del dashboard.</div>
+    </div>
+    <div class="ios-section" style="margin-top:14px;">
+      <div class="ios-label">Estado del sistema</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label">Módulo Procurement</div><div class="row-val"><span class="pill pill-ok">Online</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff3b30;"><i class="ti ti-x" aria-hidden="true"></i></div><div class="row-label">Cuentas contables (PR Submit)</div><div class="row-val"><span class="pill pill-err">Bug activo</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#34c759;"><i class="ti ti-check" aria-hidden="true"></i></div><div class="row-label">Flujo de aprobaciones</div><div class="row-val"><span class="pill pill-ok">Normal</span></div></div>
+        <div class="ios-row"><div class="row-icon" style="background:#ff9500;"><i class="ti ti-clock" aria-hidden="true"></i></div><div class="row-label">Portal proveedores</div><div class="row-val"><span class="pill pill-warn">Acceso TI</span></div></div>
+      </div>
+      <div class="ios-label">Ciclos promedio (días)</div>
+      <div class="ios-card" style="padding:12px 14px;">
+        <div class="bar-chart-row"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Vista Alegre</span><span style="color:#34c759;font-weight:600;">7,0 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#34c759;width:60%;"></div></div></div>
+        <div class="bar-chart-row"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Boa Sorte</span><span style="color:#ff9500;font-weight:600;">8,8 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#ff9500;width:73%;"></div></div></div>
+        <div class="bar-chart-row" style="margin-bottom:0;"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Draco</span><span style="color:#ff3b30;font-weight:600;">13,2 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#ff3b30;width:100%;"></div></div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen" id="dashboard">
+  <div class="statusbar"><span>9:41</span><div class="sb-icons"><i class="ti ti-signal-4g" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-wifi" style="font-size:13px;" aria-hidden="true"></i><i class="ti ti-battery-2" style="font-size:13px;" aria-hidden="true"></i></div></div>
+  <div class="nav-bar"><div class="nav-back" onclick="go('home')"><i class="ti ti-chevron-left" style="font-size:16px;" aria-hidden="true"></i>Inicio</div><span class="nav-title">Dashboard</span><span class="nav-action">Compartir</span></div>
+  <div class="inner-screen">
+    <div class="metrics">
+      <div class="mtile"><div class="mtile-val">33</div><div class="mtile-lbl">POs implementadas</div><span class="mtile-sub" style="background:#d4edda;color:#155724;">89%</span></div>
+      <div class="mtile"><div class="mtile-val" style="color:#ff3b30;">4</div><div class="mtile-lbl">POs pendientes</div><span class="mtile-sub" style="background:#ffe0e0;color:#842029;">Draco</span></div>
+    </div>
+    <div class="ios-section">
+      <div class="ios-label">Ciclo por entidad</div>
+      <div class="ios-card" style="padding:12px 14px;">
+        <div class="bar-chart-row"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Vista Alegre</span><span style="color:#34c759;font-weight:600;">7,0 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#34c759;width:60%;"></div></div></div>
+        <div class="bar-chart-row"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Boa Sorte</span><span style="color:#ff9500;font-weight:600;">8,8 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#ff9500;width:73%;"></div></div></div>
+        <div class="bar-chart-row" style="margin-bottom:0;"><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Draco</span><span style="color:#ff3b30;font-weight:600;">13,2 d</span></div><div class="bar-bg"><div class="bar-fill" style="background:#ff3b30;width:100%;"></div></div></div>
+      </div>
+      <div class="ios-label">Monto por entidad (BRL)</div>
+      <div class="ios-card">
+        <div class="ios-row"><div class="row-label">Vista Alegre · 18 SPEs</div><div class="row-val" style="font-weight:600;">3.619.060</div></div>
+        <div class="ios-row"><div class="row-label">Boa Sorte · 8 SPEs</div><div class="row-val" style="font-weight:600;">2.378.762</div></div>
+        <div class="ios-row"><div class="row-label">Draco · 11 SPEs</div><div class="row-val" style="font-weight:600;">2.431.257</div></div>
+        <div class="ios-row" style="background:#f0faf5;"><div class="row-label" style="font-weight:600;">Total</div><div class="row-val" style="font-weight:700;color:#1d9e75;">8.429.079</div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+  <div class="home-ind"><div class="ind-bar ind-dark"></div></div>
+</div>
+
+<script>
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function tick(){
+  const now=new Date();
+  const h=now.getHours(), m=String(now.getMinutes()).padStart(2,'0');
+  const t=h+':'+m;
+  document.querySelectorAll('[id^="clk"]').forEach(el=>el.textContent=t);
+  const el=document.getElementById('bigTime');
+  if(el) el.textContent=t;
+  const days=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const d=document.getElementById('bigDate');
+  if(d) d.textContent=days[now.getDay()]+', '+now.getDate()+' de '+months[now.getMonth()];
+}
+tick(); setInterval(tick,30000);
+
+// Handle hash navigation (for PWA shortcuts)
+function handleHash(){
+  const h=location.hash.replace('#','');
+  if(h && document.getElementById(h)) go(h);
+}
+window.addEventListener('hashchange', handleHash);
+handleHash();
+
+// Register Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    console.log('[PWA] Service worker registrado:', reg.scope);
+    // Ask for notification permission
+    if('Notification' in window && Notification.permission==='default'){
+      Notification.requestPermission().then(p=>console.log('[PWA] Notificaciones:',p));
+    }
+  }).catch(err=>console.error('[PWA] Error SW:',err));
+}
+
+// Install prompt (Android Chrome / Desktop)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  const bar=document.createElement('div');
+  bar.className='hint-bar';
+  bar.style='margin:14px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:#1D9E75;cursor:pointer;';
+  bar.innerHTML='<i class="ti ti-download" style="font-size:20px;color:#fff;" aria-hidden="true"></i><p style="font-size:13px;color:#fff;line-height:1.4;flex:1;">Instalá la app en tu dispositivo para usarla sin conexión <strong>→ Instalar ahora</strong></p>';
+  bar.onclick=()=>{ deferredPrompt.prompt(); bar.remove(); };
+  document.getElementById('home').querySelector('.home-bg').insertBefore(bar, document.querySelector('.app-grid-wrap'));
+  setTimeout(()=>{ if(bar.parentNode) bar.remove(); }, 12000);
+});
+
+window.addEventListener('appinstalled',()=>console.log('[PWA] App instalada'));
+</script>
+</body>
+</html>
